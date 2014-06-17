@@ -22,7 +22,7 @@
 if (!defined('PHPMYADMIN')) {
     exit;
 }
- 
+
 $cfg['Server']['auth_target'] = strtolower($cfg['Server']['auth_target']);
 $GLOBALS['auth_type_class'] = "Authentication" . ucfirst($cfg['Server']['auth_target']);
 
@@ -64,6 +64,7 @@ class AuthenticationLatch extends AuthenticationPlugin {
             $_SESSION['OTP'] = NULL;
 
             if (isset($_REQUEST['OTP']) && ctype_alnum($_REQUEST['OTP']) && ($server_otp == $_REQUEST['OTP'])) {
+                $_SESSION['logged_in'] = true;
                 return true;
             } else {
                 $this->authFails();
@@ -96,7 +97,9 @@ class AuthenticationLatch extends AuthenticationPlugin {
 
         $status = getLatchStatus($accountId);
 
-        if ($status != null) {
+        $logged_in = isset($_SESSION['logged_in']) && $_SESSION['logged_in'];
+
+        if ($status != null && !$logged_in) {
             if ($status['accountBlocked']) {
                 $this->authFails();
                 return false;
