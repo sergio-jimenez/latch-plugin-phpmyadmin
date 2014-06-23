@@ -49,21 +49,18 @@ class AuthenticationLatch extends AuthenticationPlugin {
         global $userlink, $cfg;
 
         $user = $GLOBALS['PHP_AUTH_USER'];
-        $pass = $GLOBALS['PHP_AUTH_PW'];
 
         $otp_enabled = true;
-        $login_correct = false;
 
         $pma_version = explode(".", $cfg['PMA_VERSION']);
 
         $GLOBALS['auth_instance']->authSetUser();
 
-
         if (isset($_SESSION['OTP'])) {
             $server_otp = $_SESSION['OTP'];
             $_SESSION['OTP'] = NULL;
 
-            if (isset($_REQUEST['OTP']) && ctype_alnum($_REQUEST['OTP']) && ($server_otp == $_REQUEST['OTP'])) {
+            if (isset($_POST['OTP']) && ctype_alnum($_POST['OTP']) && ($server_otp == $_POST['OTP'])) {
                 $_SESSION['logged_in'] = true;
                 return true;
             } else {
@@ -93,25 +90,31 @@ class AuthenticationLatch extends AuthenticationPlugin {
         if ($userlink->errno != 0) {
             return true;
         }
-        $accountId = getAccountIdFromDB($user);
-
-        $status = getLatchStatus($accountId);
 
         $logged_in = isset($_SESSION['logged_in']) && $_SESSION['logged_in'];
 
-        if ($status != null && !$logged_in) {
-            if ($status['accountBlocked']) {
-                $this->authFails();
-                return false;
-            } else if (isset($status['twoFactor']) && $otp_enabled) {
-                $_SESSION['OTP'] = $status['twoFactor'];
-                include_once("libraries/plugins/latch/secondFactorForm.php");
-                die();
+        if (!$logged_in) {
+            $accountId = getAccountIdFromDB($user);
+
+            $status = getLatchStatus($accountId);
+
+            if ($status != null) {
+                if ($status['accountBlocked']) {
+                    $this->authFails();
+                    return false;
+                } else if (isset($status['twoFactor']) && $otp_enabled) {
+                    $_SESSION['OTP'] = $status['twoFactor'];
+                    include_once("libraries/plugins/latch/secondFactorForm.php");
+                    die();
+                }
             }
         }
+        $_SESSION['logged_in'] = true;
     }
 
     public function authFails() {
+        unset($_SESSION['logged_in']);
+
         return $GLOBALS['auth_instance']->authFails();
     }
 

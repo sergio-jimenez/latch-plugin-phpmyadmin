@@ -20,11 +20,11 @@
 
 include "LatchWrapper.php";
 
-if (isset($_REQUEST ['operation'])) {
-    if (isset($_REQUEST ['pairingToken'])) {
-        pairLatchAccount($_REQUEST ['pairingToken'], $_REQUEST ['user']);
-    } else if ($_REQUEST ['operation'] == "unpair") {
-        unpairLatchAccount($_REQUEST ['user']);
+if (isset($_POST['operation'])) {
+    if (isset($_POST['pairingToken'])) {
+        pairLatchAccount($_POST['pairingToken'], $_POST['user']);
+    } else if ($_POST['operation'] == "unpair") {
+        unpairLatchAccount($_POST['user']);
     }
 }
 
